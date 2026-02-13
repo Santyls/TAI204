@@ -1,5 +1,5 @@
 #importaciones
-from fastapi import FastAPI
+from fastapi import FastAPI, status, HTTPException
 import asyncio
 from typing import Optional
 
@@ -32,14 +32,14 @@ async def Hola():
         "status":"200"
     }
     
-@app.get("/v1/usuario/{id}", tags=['Parametro Obligatorio'])
+@app.get("/v1/ParametroOb/{id}", tags=['Parametro Obligatorio'])
 async def consultauno(id:int):
 
     return{"menssaje":"Usuario encontrado",
            "usuario":id,
            "status":"200"}
 
-@app.get("/v1/usuarios/", tags=['Parametro Opcional'])
+@app.get("/v1/ParemtroOp/", tags=['Parametro Opcional'])
 async def consultatodos(id:Optional[int]=None):
     if id is not None:
         for usuariosK in usuarios:
@@ -48,3 +48,26 @@ async def consultatodos(id:Optional[int]=None):
         return{"mensaje":"usuario no encontrado", "status":"200"}
     else:
         return{"mnesaje":"No se proporciono id"}
+
+
+@app.get("/v1/usuarios/", tags=['CRUD HTTP'])
+async def consultaT():
+    return {
+        "status":"200",
+        "total": len(usuarios),
+        "Usuarios": usuarios
+    } 
+
+@app.get("/v1/usuarios/", tags=['CRUD HTTP'])
+async def agregar_usuario(usuario:dict):
+    for usr in usuarios:
+        if usr["id"] == usuario.get("id"):
+            raise HTTPException(
+                status_code= 400,
+                detail="El id ya existe"
+            )
+    usuarios.append(usuario)
+    return{
+        "Mensaje":"Usuario agregado",
+        "Usuario":usuario
+    }
