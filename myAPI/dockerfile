@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 #Creamos carpeta de trabajo del contenedor
-WORKDIR / app
+WORKDIR /app
 #Copiamos los requirimientos del servidor
 COPY requirements.txt . 
 #el punto para decirle que queremos uno igual a un lado
