@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <div class="contendor">
+        <h1>Usuarios desde FastApi</h1>
+        <!--Formulario-->
+        <form action="/addUser" method="POST">
+            <input name="id">
+            <input name="nombre">
+            <input name="edad">
+            <button name="Agregar">Agregar Usuario</button>
+        </form>
+        <!--Tabla-->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Edad</th>
+                    <th>Accion</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>{{ usuario.id}}</td>
+                    <td>{{ usuario.nombre}}</td>
+                    <td>{{ usuario.edad}}</td>
+                    <td>
+                        <form action="/deleteUser/{{ usuario.id }}" method="POST">
+                            <button class="eliminar">Eliminar</button>
+                        </form>
+                    </td>
+                    
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="3" class="sin-datos">No hay usuarios/sin conexion a fastAPI</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+    </div>
+    
+</body>
+</html>
