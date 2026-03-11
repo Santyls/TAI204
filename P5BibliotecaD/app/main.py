@@ -62,7 +62,7 @@ async def registrar_libro(libro: Libro):
     # Verificamos si el libro ya existe
     for l in libros_db:
         if l["id_libro"] == libro.id_libro:
-            raise HTTPException(status_code=400, detail="El ID del libro ya existe.")
+            raise HTTPException(status_code=400, detail="El ID del libro ya existe.") #status_code=status.HTTP_409_CONFLICT
     
     libros_db.append(libro.model_dump())
     
@@ -132,3 +132,4 @@ async def eliminar_registro_prestamo(id_prestamo: int):
             return {"mensaje": "Registro de préstamo eliminado", "status": 200}
             
     raise HTTPException(status_code=404, detail="Registro de préstamo no encontrado")
+

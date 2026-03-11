@@ -140,3 +140,83 @@ async def eliminar_usuario(id: int, usuarioAuth:str=Depends(verificar_peticion))
             }
             
     raise HTTPException(status_code=404, detail="Usuario no encontrado, no se puede eliminar")
+
+
+security = HTTPBasic()
+
+def verificar_peticion(credenciales: HTTPBasicCredentials = Depends(security)):
+    usuarioAut = secrets.compare_digest(credenciales.username, "admin")
+    contraAuth = secrets.compare_digest(credenciales.password, "123456")
+
+    if not (usuarioAut and contraAuth):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales no autorizadas"
+        )
+    return credenciales.username
+
+
+class CategoriaEnum(str, Enum):
+    opcion1 = "Activo"
+    opcion2 = "Inactivo"
+
+class MiModelo(BaseModel):
+    # ID mayor a 0
+    id: int = Field(..., gt=0, description="ID único")
+    
+    # Textos con longitud mínima y máxima
+    nombre: str = Field(..., min_length=3, max_length=50, example="Juan")
+    
+    # Números enteros en un rango (ej. edades, años)
+    edad: int = Field(..., ge=18, le=120, description="Debe ser mayor de edad")
+    
+    # Validar correos (Requiere EmailStr importado)
+    correo: EmailStr = Field(..., example="usuario@correo.com")
+    
+    # Listas desplegables (Enum) con valor por defecto
+    estado: CategoriaEnum = CategoriaEnum.opcion1
+
+@app.delete("/recursos/{item_id}", tags=['Recursos Protegidos'])
+async def eliminar_recurso(item_id: int, usuarioAuth: str = Depends(verificar_peticion)):
+    # 1. Buscar el elemento por ID
+    for db_item in elementos_db:
+        if db_item["id"] == item_id:
+            # 2. Eliminar de la lista
+            elementos_db.remove(db_item)
+            return {"mensaje": f"Recurso eliminado por {usuarioAuth}"}
+            
+    # 3. Si no lo encuentra
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso no encontrado")
+
+@app.put("/recursos/{item_id}", tags=['Recursos Protegidos'])
+async def actualizar_recurso(
+    item_id: int, 
+    nuevo_estado: CategoriaEnum, 
+    usuarioAuth: str = Depends(verificar_peticion)
+):
+    # 1. Buscar el elemento por ID
+    for db_item in elementos_db:
+        if db_item["id"] == item_id:
+            # 2. Actualizar el valor
+            db_item["estado"] = nuevo_estado
+            return {
+                "mensaje": f"Actualizado por {usuarioAuth}", 
+                "data": db_item
+            }
+            
+    # 3. Si no lo encuentra, lanza error
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso no encontrado")
+
+##@app.get("/recursos/", tags=['Recursos'])
+##async def listar_recursos():
+#    return {"total": len(elementos_db), "datos": elementos_db}
+
+#@app.post("/recursos/", status_code=status.HTTP_201_CREATED, tags=['Recursos'])
+#async def registrar_recurso(item: MiModelo):
+    # 1. Validar si ya existe el ID
+    #for db_item in elementos_db:
+     #        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El ID ya existe")
+   #         
+  #  # 2. Guardar como diccionario
+ #    
+#    return {"mensaje": "Registro exitoso", "data": item}
