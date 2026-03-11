@@ -20,13 +20,21 @@ usuarios=[
     {"id":3,"nombre":"Saul","edad":21}
 ]
 
+#Gt, ge, lt, le: Restricciones numérica 
+#(mayor que, mayor o igual, menor que, menor o igual) 
+#Min_length, max_length: 
+#Restricciones en la longitud de cadenas de texto. 
 #Modelo Pydantic de validación---------------------------------------------------------
 
 class crear_usuario(BaseModel):
+    
     id: int = Field(...,gt=0, description= "identificador de usuario")
     nombre: str = Field(...,min_length=3, max_length= 50, example="Pepe Pecas")
     edad: int = Field(...,ge=1, le=125,description="Edad valida entre 1 y 125")
 
+#Field(): Valores por defecto y restricciones. 
+#Contint(): Rstricciones valores enteros en un rango. 
+#Contstr(): Restricciones de cadenas con reglas específicas. 
 
 #####################
 #Seguridad

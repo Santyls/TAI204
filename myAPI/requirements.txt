@@ -1,2 +1,4 @@
+#usar docker-compose up --build para reconstuir la imagen del contenedor
 fastapi
 uvicorn[standar]
+pydantic[email]

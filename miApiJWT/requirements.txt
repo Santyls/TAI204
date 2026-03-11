@@ -1,2 +1,4 @@
 fastapi
-uvicorn[standar]
+uvicorn[standard]
+PyJWT
+python-multipart
