@@ -42,9 +42,23 @@ async def consulta_todos(db: Session = Depends(get_db)):
     # return db.query(Usuario).all()
     return {"status": "conectado a postgres"}
 
+# GET (ID)
+@router.get("/{id}")
+async def consulta_uno(id: int, db: Session = Depends(get_db)):
+    # Buscamos en la BD el primer registro que coincida con el ID
+    usuario = db.query(usuarioDB).filter(usuarioDB.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    return {
+        "mensaje": "Usuario encontrado",
+        "usuario": usuario,
+        "status": 200
+    }
+
 
 @router.post("/")
-async def crear_usuario(usuarioP: crear_usuario, db: Session = Depends(get_db)):
+async def crear_n_usuario(usuarioP: crear_usuario, db: Session = Depends(get_db)):
     usuarioNuevo = usuarioDB(nombre=usuarioP.nombre, edad=usuarioP.edad)
     db.add(usuarioNuevo)
     db.commit()
@@ -52,33 +66,65 @@ async def crear_usuario(usuarioP: crear_usuario, db: Session = Depends(get_db)):
     return {"Mensaje": "Usuario agregado", "Usuario": usuarioNuevo, "status": 200}
 
 
-@router.put("/")
-async def actualizar_usuario(usuario: dict):
-    if "id" not in usuario:
-        raise HTTPException(status_code=400, detail="El json debe incluir el campo 'id' para actualizar")
-    for usr in usuarios:
-        if usr.get("id") == usuario.get("id"):
-            usr["nombre"] = usuario.get("nombre", usr["nombre"]) 
-            usr["edad"] = usuario.get("edad", usr["edad"])
-            
-            return {
-                "Mensaje": "Usuario actualizado",
-                "Usuario": usr,
-                "status": 200
-            }
+# PUT - Actualización completa
+@router.put("/{id}")
+async def actualizar_usuario(id: int, usuarioP: crear_usuario, db: Session = Depends(get_db)):
+    # Buscamos si existe el id ingresado
+    usuario = db.query(usuarioDB).filter(usuarioDB.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado, no se puede actualizar")
     
-    raise HTTPException(status_code=404, detail="Usuario no encontrado, no se puede actualizar")
+    # Reemplazamos todos sus campos, en este caso nombre y edad
+    usuario.nombre = usuarioP.nombre
+    usuario.edad = usuarioP.edad
+    
+    db.commit() # Guardamos cambios en la db
+    db.refresh(usuario)
+    
+    return {
+        "Mensaje": "Usuario actualizado correctamente",
+        "Usuario": usuario,
+        "status": 200
+    }
 
 
+# PATCH
+@router.patch("/{id}")
+async def modificar_usuario(id: int, campos: dict, db: Session = Depends(get_db)):
+    # Buscamos si existe un usuario con ese ID
+    usuario = db.query(usuarioDB).filter(usuarioDB.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    # Solo actualizamos lo que el usuario haya mandado en el JSON, si es nombre, nombre , y edad, pues edad.
+    if "nombre" in campos:
+        usuario.nombre = campos["nombre"]
+    if "edad" in campos:
+        usuario.edad = campos["edad"]
+    # Se actualiza el registro
+    db.commit()
+    db.refresh(usuario)
+    
+    return {
+        "Mensaje": "Usuario modificado parcialmente",
+        "Usuario": usuario,
+        "status": 200
+    }
+
+
+# DELETE
 @router.delete("/{id}")
-async def eliminar_usuario(id: int, usuarioAuth:str=Depends(verificar_peticion)):
-    for usr in usuarios:
-        if usr["id"] == id:
-            usuarios.remove(usr)
-            
-            return {
-                "Mensaje": f"Usuario eliminado por {usuarioAuth}",
-                "status": 200   
-            }
-            
-    raise HTTPException(status_code=404, detail="Usuario no encontrado, no se puede eliminar")
+async def eliminar_usuario(id: int, usuarioAuth: str = Depends(verificar_peticion), db: Session = Depends(get_db)):
+    # Buscamos si existe el usuario del ID
+    usuario = db.query(usuarioDB).filter(usuarioDB.id == id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado, no se puede eliminar")
+    
+    # Lo eliminamos usando el método delete de SQLAlchemy
+    db.delete(usuario)
+    db.commit() # Actualizamos el registro
+    
+    return {
+        "Mensaje": f"Usuario eliminado por {usuarioAuth}",
+        "status": 200   
+    }
