@@ -2,3 +2,7 @@
 fastapi
 uvicorn[standar]
 pydantic[email]
+
+sqlalchemy
+
+psycopg2-binary
